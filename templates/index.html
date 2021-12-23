@@ -69,8 +69,85 @@
             });
         });
 
+        function compute() {
+            if ($("#result-table")) {
+                $("#result").empty();
+            }
+            $.ajax({
+                type: "POST",
+                url: "/Compute",
+                data: {
+                    "model": $("input[name='model']:checked").val(),
+                    "a": $("input[name = 'a']").val(),
+                    "b": $("input[name = 'b']").val(),
+                    "c": $("input[name = 'c']").val(),
+                    "d": $("input[name = 'd']").val(),
+                    "plus_minus_sign": $("select[name='plus_minus_sign']").val(),
+                    "grid": $("input[name = 'grid']").val(),
+                    "iterateTimes": $("input[name = 'iterateTimes']").val(),
+                    "lowerBoundary": $("input[name = 'lowerBoundary']").val(),
+                    "upperBoundary": $("input[name = 'upperBoundary']").val()
+                },
+                dataType: "json",
+                success: function (json) {
+                    console.log(json);//打印服务端返回的数据(调试用)
+                    var item
+                    $("#result").append("<br><b>Result:</b>")
+                    $("#result").append("<table id=\"result-table\" style=\"width:100%\"> </table>")
+                    $("#result-table").append("<tr id=\"point\"></tr>");
+                    $("#point").append("<td>points</td>");
+                    $.each(json, function (i, item) {
+                        $("#point").append("<td>" + item[0] + "</td>");
+                    });
+                    $("#result-table").append("<tr id=\"weight\"></tr>");
+                    $("#weight").append("<td>weight</td>");
+                    $.each(json, function (i, item) {
+                        $("#weight").append("<td>" + item[1] + "</td>");
+                    });
+                }
+            });
+
+        }
+
+        function plot() {
+            if ($("#functionImage")) {
+                $("#functionImage").remove()
+            }
+            $.ajax({
+                type: "POST",
+                url: "/Plot",
+                data: {
+                    "model": $("input[name='model']:checked").val(),
+                    "a": $("input[name = 'a']").val(),
+                    "b": $("input[name = 'b']").val(),
+                    "c": $("input[name = 'c']").val(),
+                    "d": $("input[name = 'd']").val(),
+                    "plus_minus_sign": $("select[name='plus_minus_sign']").val(),
+                    "grid": $("input[name = 'grid']").val(),
+                    "iterateTimes": $("input[name = 'iterateTimes']").val(),
+                    "lowerBoundary": $("input[name = 'lowerBoundary']").val(),
+                    "upperBoundary": $("input[name = 'upperBoundary']").val()
+                },
+                dataType: "json",
+                success: function (json) {
+                    console.log(json);//打印服务端返回的数据(调试用)
+                    $("#function").append("<div id=\"functionImage\"></div>")
+                    $("#functionImage").append("<b>Plot:</b><br>")
+                    $("#functionImage").append("<img id='functionImage' src=\"data:image/png;base64," + json + "\">")
+                }
+            });
+        }
+
+        function plotAndCompute() {
+            compute();
+            plot();
+        }
     </script>
     <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+
         .designArea {
             border: 2px #f2f2f2 dotted;
             background-color: #f7f7f7;
@@ -89,7 +166,7 @@
 
         #plot {
             background-color: #f7f7f7;
-            width: 55%;
+            width: 65%;
             float: right;
             margin: 1%;
 
@@ -111,7 +188,7 @@ described by a general family of models.
 <p>$$\text{Model 2:}\quad y = a \exp{(x/b)} \text{ with }a>0$$</p>
 <p>$$\text{Model 3:}\quad y = a \exp{(\pm(x/b)^d)} \text{ with }a>0, b>0, d\geq1$$</p>
 <p>$$\text{Model 4:}\quad y = a [c - (c -1)\exp{(-x/b)}] \text{ with }a>0, b>0, c>0$$</p>
-<p>$$\text{Model 5:}\quad y = a [c - (c -1)\exp{-(x/b)^d}] \text{ with }a>0, b>0, c>0,d\geq1$$</p>
+<p>$$\text{Model 5:}\quad y = a [c - (c -1)\exp{(-(x/b)^d)}] \text{ with }a>0, b>0, c>0,d\geq1$$</p>
 <p>This four models can be used for describing the change in any continuous endpoint as a function of dose.</p>
 <p>\(y\) is any continuous endpoint, and \(x\) denotes the dose. </p>
 <p>In all models the parameter \(a\) represents the level of the endpoint at dose 0, and \(b\) can be considered as the
@@ -169,18 +246,23 @@ described by a general family of models.
                 <label>lower dose boundary (bigger than 0):</label><br>
                 <input type="text" name="lowerBoundary" value="0.00001"><br>
                 <label>upper dose boundary:</label><br>
-                <input type="text" name="upperBoundary" value="1500"><br>
-                <label>number of available dose levels (unless than 100):</label><br>
+                <input type="text" name="upperBoundary" value="2500"><br>
+                <label>number of available dose levels (less than 100):</label><br>
                 <input type="text" name="grid" value="1000"><br>
-                <label>Number of iterations for algorithm (unless than 100):</label><br>
+                <label>Number of iterations for algorithm (less than 100):</label><br>
                 <input type="text" name="iterateTimes" value="500"><br>
 
             </div>
-            <input class="submit_btn" type="submit" value="Submit" onclick="submit()">
+            <input class="button" type="button" value="Compute" onclick="plotAndCompute()">
         </form>
     </div>
     <div id="plot">
+        <div id="function">
 
+        </div>
+        <div id="result">
+
+        </div>
     </div>
 
 

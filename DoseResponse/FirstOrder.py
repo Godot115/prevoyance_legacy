@@ -120,7 +120,7 @@ def firstOrder(designPoints, lowerBoundary, upperBoundary,
                 maxVariance = dVariance
                 maxVariancePoint = designSpace[j]
         designPoints = cluster(maxVariancePoint, designPoints, upperBoundary - lowerBoundary)
-        print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
+        # print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
         informationMatrix = model.informationMatrix(designPoints, *args)
         invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
 
@@ -131,7 +131,7 @@ def firstOrder(designPoints, lowerBoundary, upperBoundary,
         x.append(designSpace[point])
         y.append(variance)
     plt.plot(x, y)
-    plt.show()
+    # plt.show()
 
     result = formatResult(designPoints)
     return result
@@ -181,7 +181,7 @@ def firstOrderModel3(designPoints, lowerBoundary, upperBoundary,
                 maxVariance = dVariance
                 maxVariancePoint = designSpace[j]
         designPoints = cluster(maxVariancePoint, designPoints, upperBoundary - lowerBoundary)
-        print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
+        # print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
         informationMatrix = model.informationMatrix(designPoints, plus_minus_sign, *args)
         invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
 
@@ -192,7 +192,7 @@ def firstOrderModel3(designPoints, lowerBoundary, upperBoundary,
         x.append(designSpace[point])
         y.append(variance)
     plt.plot(x, y)
-    plt.show()
+    # plt.show()
 
     result = formatResult(designPoints)
 
