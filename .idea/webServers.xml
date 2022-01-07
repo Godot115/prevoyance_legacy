@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="196b9a9f-f3f3-417a-bdb5-609da52350a8" name="Tencent" url="http://zhangyue.fun">
+        <fileTransfer rootFolder="/home/godot" accessType="SFTP" host="49.232.172.102" port="22" sshConfigId="66ab13bd-d429-4fe0-9f92-a255dd0e0df8" sshConfig="godot@49.232.172.102:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

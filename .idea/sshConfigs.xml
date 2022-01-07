@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="49.232.172.102" id="66ab13bd-d429-4fe0-9f92-a255dd0e0df8" keyPath="$USER_HOME$/.ssh/Tencent" port="22" nameFormat="DESCRIPTIVE" username="godot" />
+    </configs>
+  </component>
+</project>

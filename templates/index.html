@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Prevoyance</title>
-    <script src="//mathjax.rstudio.com/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script   id="MathJax-script" src="https://cdn.bootcss.com/mathjax/3.0.5/es5/tex-mml-chtml.js"></script>
     <script src="//libs.baidu.com/jquery/1.10.2/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -247,10 +247,10 @@ described by a general family of models.
                 <input type="text" name="lowerBoundary" value="0.00001"><br>
                 <label>upper dose boundary:</label><br>
                 <input type="text" name="upperBoundary" value="2500"><br>
-                <label>number of available dose levels (less than 100):</label><br>
+                <label>number of available dose levels (min 100):</label><br>
                 <input type="text" name="grid" value="1000"><br>
-                <label>Number of iterations for algorithm (less than 100):</label><br>
-                <input type="text" name="iterateTimes" value="500"><br>
+                <label>Number of iterations for algorithm (min 100):</label><br>
+                <input type="text" name="iterateTimes" value="100"><br>
 
             </div>
             <input class="button" type="button" value="Compute" onclick="plotAndCompute()">

@@ -9,14 +9,14 @@ def chooseModel(x, model, plus_minus_sign, *args):
     b = args[1]
     c = args[2]
     d = args[3]
-    if model == "model2":
+    if model == "Model2":
         return a * np.exp(x / b)
-    elif model == "model3":
+    elif model == "Model3":
         if plus_minus_sign == "positive":
             return a * np.exp((x / b) ** d)
         else:
             return a * np.exp(-(x / b) ** d)
-    elif model == "model4":
+    elif model == "Model4":
         return a * (c - (c - 1) * np.exp(-x / b))
     else:
         return a * (c - (c - 1) * np.exp(-(x / b) ** d))

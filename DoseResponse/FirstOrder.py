@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 from collections import Counter
 
 import matplotlib.pyplot as plt
@@ -11,17 +12,21 @@ from DoseResponse.models import model4
 from DoseResponse.models import model5
 
 
-# from models import model2
-# from models import model3
-# from models import model4
-# from models import model5
-
-
-def createInitialPoints(lowerBoundary, upperBoundary):
-    initialPointsNumber = 10
-    points = [random.uniform(lowerBoundary, upperBoundary) for i in range(initialPointsNumber)]
-    points.sort()
-    return points
+def formatResult(designPoints):
+    """
+    format the result into a list of tuples
+    :param designPoints:
+    :return:
+    """
+    designPoints = Counter(designPoints)
+    designPoints = designPoints.items()
+    numbers = 0
+    for i in designPoints:
+        numbers += i[1]
+    result = []
+    for i in designPoints:
+        result.append((round(i[0], 3), round((i[1] / numbers), 3)))
+    return result
 
 
 def cluster(newPoint, currentPoints, designSpace):
@@ -40,42 +45,67 @@ def cluster(newPoint, currentPoints, designSpace):
     return currentPoints
 
 
-def delMinimalPoints(designPoints, threshold):
+def delPoint(informationMatrix, point, plus_minus_sign, currentPoints, model, *args):
     """
-    Delete points that occur less than the threshold
-    :param designPoints:
-    :param threshold:
+    delete a point from design points, return new information matrix
+    :param informationMatrix:
+    :param point:
+    :param plus_minus_sign:
+    :param currentPoints:
+    :param model:
     :return:
     """
-    dels = []
-    for i in designPoints:
-        if i[1] < threshold:
-            dels.append(i)
-    for i in dels:
-        designPoints.remove(i)
-    designPoints.sort(key=lambda x: x[0])
-    return designPoints
+    currentPointsNumber = len(currentPoints)
+    informationMatrix = (currentPointsNumber / (currentPointsNumber - 1)) * informationMatrix - (
+                1 / (currentPointsNumber - 1)) * model.vectorOfPartialDerivative(
+            point, plus_minus_sign, *args) * \
+                            model.vectorOfPartialDerivative(point, plus_minus_sign, *args).T
+    return informationMatrix
 
 
-def formatResult(designPoints):
+def addPoint(informationMatrix, newPoint, currentPoints, model, designSpace, plus_minus_sign,
+             *args):
     """
-    format the result into a list of tuples
-    :param designPoints:
+    add a point into design points, return new design points and new information matrix
+    :param informationMatrix:
+    :param newPoint:
+    :param currentPoints:
+    :param model:
+    :param designSpace:
+    :param plus_minus_sign:
+    :param args:
     :return:
     """
-    designPoints = Counter(designPoints)
-    designPoints = designPoints.items()
-    numbers = 0
-    for i in designPoints:
-        numbers += i[1]
-    result = []
-    for i in designPoints:
-        result.append((i[0], i[1] / numbers))
-    return result
+    threshold = designSpace / 50
+    currentPointsNumber = len(currentPoints)
+    informationMatrix = ((
+                                     currentPointsNumber - 1) / currentPointsNumber) * informationMatrix + model.vectorOfPartialDerivative(
+            newPoint, plus_minus_sign, *args) * \
+                            model.vectorOfPartialDerivative(newPoint, plus_minus_sign, *args).T * \
+                            (1 / currentPointsNumber)
+    for i in range(len(currentPoints)):
+        if abs(newPoint - currentPoints[i]) < threshold:
+            informationMatrix = (currentPointsNumber / (currentPointsNumber - 1)) * informationMatrix - (
+                        1 / (currentPointsNumber - 1)) * model.vectorOfPartialDerivative(
+                    currentPoints[i], plus_minus_sign, *args) * \
+                                    model.vectorOfPartialDerivative(currentPoints[i], plus_minus_sign, *args).T
+            informationMatrix = ((
+                                             currentPointsNumber - 1) / currentPointsNumber) * informationMatrix + model.vectorOfPartialDerivative(
+                    newPoint, plus_minus_sign, *args) * \
+                                    model.vectorOfPartialDerivative(newPoint, plus_minus_sign, *args).T * \
+                                    (1 / currentPointsNumber)
+            currentPoints[i] = newPoint
+    currentPoints.append(newPoint)
+    currentPoints.sort()
+    return currentPoints, informationMatrix
 
+def createInitialPoints(lowerBoundary, upperBoundary):
+    points =  list(np.linspace(lowerBoundary, upperBoundary, num=10))
+    points.sort()
+    return points
 
 def firstOrder(designPoints, lowerBoundary, upperBoundary,
-               model: str,
+               plus_minus_sign, model,
                maxIteration=100, grid=1000, *args):
     """
     First order alrogithm
@@ -89,73 +119,16 @@ def firstOrder(designPoints, lowerBoundary, upperBoundary,
     :return:
     """
     designSpace = np.linspace(lowerBoundary, upperBoundary, num=grid)
+    print(model)
     if model == "Model2":
         model = model2
+    elif model == "Model3":
+        model = model3
     elif model == "Model4":
         model = model4
     elif model == "Model5":
         model = model5
-    initialPoints = []
-    for i in designPoints:
-        initialPoints.append(i)
-    informationMatrix = model.informationMatrix(designPoints, *args)
-    invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
-    i = 0
-    x = []
-    y = []
-    while i < maxIteration:
-        if i < 50 and i >= 40:
-            if initialPoints[0] in designPoints:
-                designPoints.remove(initialPoints[0])
-            initialPoints.remove(initialPoints[0])
-            informationMatrix = model.informationMatrix(designPoints, *args)
-            invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
-        i += 1
-        maxVariance = sys.float_info.min
-        maxVariancePoint = random.uniform(0, 1000)
-        for j in range(len(designSpace)):
-            dVariance = model.variance(designSpace[j], model.vectorOfPartialDerivative
-                                       , invInformationMatrix, *args)
-            if dVariance > maxVariance:
-                maxVariance = dVariance
-                maxVariancePoint = designSpace[j]
-        designPoints = cluster(maxVariancePoint, designPoints, upperBoundary - lowerBoundary)
-        # print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
-        informationMatrix = model.informationMatrix(designPoints, *args)
-        invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
 
-    # plot
-    for point in range(len(designSpace)):
-        variance = model.variance(designSpace[point], model.vectorOfPartialDerivative
-                                  , invInformationMatrix, *args)
-        x.append(designSpace[point])
-        y.append(variance)
-    plt.plot(x, y)
-    # plt.show()
-
-    result = formatResult(designPoints)
-    return result
-
-
-def firstOrderModel3(designPoints, lowerBoundary, upperBoundary,
-                     plus_minus_sign="positive",
-                     maxIteration=100, grid=1000, *args):
-    """
-    first order algorithm for model 3
-    :param designPoints:
-    :param lowerBoundary:
-    :param upperBoundary:
-    :param plus_minus_sign:
-    :param maxIteration:
-    :param grid:
-    :param args:
-    :return:
-    """
-    designSpace = np.linspace(lowerBoundary, upperBoundary, num=grid)
-    model = model3
-
-    if plus_minus_sign != "positive":
-        plus_minus_sign = "negative"
     initialPoints = []
     for i in designPoints:
         initialPoints.append(i)
@@ -167,56 +140,35 @@ def firstOrderModel3(designPoints, lowerBoundary, upperBoundary,
     while i < maxIteration:
         if i < 50 and i >= 40:
             if initialPoints[0] in designPoints:
+                informationMatrix = delPoint(informationMatrix, initialPoints[0], plus_minus_sign, designPoints, model, *args)
                 designPoints.remove(initialPoints[0])
             initialPoints.remove(initialPoints[0])
-            informationMatrix = model.informationMatrix(designPoints, plus_minus_sign, *args)
             invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
         i += 1
         maxVariance = sys.float_info.min
         maxVariancePoint = random.uniform(0, 1000)
         for j in range(len(designSpace)):
             dVariance = model.variance(designSpace[j], model.vectorOfPartialDerivative
-                                       , invInformationMatrix, plus_minus_sign, *args)
+                                           , invInformationMatrix, plus_minus_sign, *args)
             if dVariance > maxVariance:
                 maxVariance = dVariance
                 maxVariancePoint = designSpace[j]
-        designPoints = cluster(maxVariancePoint, designPoints, upperBoundary - lowerBoundary)
-        # print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
-        informationMatrix = model.informationMatrix(designPoints, plus_minus_sign, *args)
+        designPoints, informationMatrix = addPoint(informationMatrix, maxVariancePoint, designPoints, model,
+                                                   upperBoundary - lowerBoundary, plus_minus_sign, *args)
+        print(i.__repr__() + "th iratathion, Max d: ", maxVariance)
         invInformationMatrix = model.inverseInformationMatrix(informationMatrix)
 
     # plot
     for point in range(len(designSpace)):
         variance = model.variance(designSpace[point], model.vectorOfPartialDerivative
-                                  , invInformationMatrix, plus_minus_sign, *args)
+                                       , invInformationMatrix, plus_minus_sign, *args)
         x.append(designSpace[point])
         y.append(variance)
     plt.plot(x, y)
     # plt.show()
 
     result = formatResult(designPoints)
-
     return result
 
-# if __name__ == "__main__":
-#     lowerBoundary = 0.000001
-#     upperBoundary = 1500
-#     grid = 1000
-#     iterateTimes = 1000
-#     plus_minus_sign = "positive"
-#     model = "Model5"
-#     points = createInitialPoints(lowerBoundary, upperBoundary)
-#     a = 349.02687
-#     b = 1067.04343
-#     c = 0.76332
-#     d = 2.60551
-#     args = (a, b, c, d)
-#     if model == "model3":
-#         optimalPoints = firstOrderModel3(points, lowerBoundary, upperBoundary,
-#                                          "negative",
-#                                          iterateTimes, grid, *args)
-#     else:
-#         optimalPoints = firstOrder(points, lowerBoundary, upperBoundary,
-#                                    model,
-#                                    iterateTimes, grid, *args)
-#     print(optimalPoints)
+
+
